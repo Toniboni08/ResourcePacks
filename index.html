@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Sound Test</title>
+</head>
+<body>
+    <audio id="audio" autoplay></audio>
+    <button id="callBtn">call</button>
+    <input id="idInput">
+    <span id="ownId"></span>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script>
+        let peer = new Peer();
+        let idDisplay = document.querySelector('#ownId');
+        let btn = document.querySelector('#callBtn');
+        let input = document.querySelector('#idInput');
+        let audio = document.querySelector('#audio');
+
+        peer.on('open', (id) => {
+            idDisplay.innerHTML = id;
+
+             btn.addEventListener('click', () => {
+                navigator.mediaDevices.getUserMedia({video: false, audio: true})
+                .then((stream) => {
+                    let call = peer.call(input.value, stream);
+                    call.on('stream', (stream) => {
+                        addStream(stream);
+                    });
+                })
+                .catch((error) => {
+                    alert(error);
+                });
+            });
+
+            peer.on('call', (call) => {
+                call.on('stream', (stream) => {
+                    addStream(stream);
+                });
+
+                navigator.mediaDevices.getUserMedia({video: false, audio: true})
+                .then((stream) => {
+                    call.answer(stream);
+                })
+                .catch((error) => {
+                    alert(error);
+                });
+            });
+
+            peer.on('close', () => {
+                idDisplay.innerHTML = "closed!";
+            });
+        });
+
+        function addStream(stream) {
+            audio.srcObject = stream;
+        }
+    </script>
+</body>
+</html>
